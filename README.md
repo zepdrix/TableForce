@@ -12,10 +12,10 @@ Built-in methods include:
  - `insert` => inserts a new row into the table
  - `update` => updates an existing row in the table with given params
  - `save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
- - `where` =>
- - `belongs_to` =>
- - `has-many` =>
- - `has_one_through` =>
+ - `where` => initiates a SQL query with a params argument, prevents SQL injection attacks
+ - `belongs_to` => builds a method that describes a relationship with a given association name and an options hash
+ - `has_many` => builds a method that describes a relationship with a given association name and an options hash
+ - `has_one_through` => builds a method that describes a relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
 
 ## TableForce looks great, how can I use it?
 ---
@@ -53,4 +53,33 @@ Using irb/pry, you can load the file and access the methods.
 => [#<Guitar:0x007fec62ed6bf0 @attributes={:id=>2, :name=>"Rickenbacker 325", :guitarist_id=>2}>,
  #<Guitar:0x007fec62ed69c0 @attributes={:id=>5, :name=>"Epiphone Casino", :guitarist_id=>2}>]
 
+```
+
+Once you create multiple models define associations in them you will be able to use the association methods.
+
+```ruby
+#model.rb
+
+require_relative "../lib/sql_object"
+require_relative "../lib/associatable"
+
+class Guitar > SQLObject
+  finalize!
+
+  belongs_to :guitarist
+  has_one_through :band, :guitarist, :band
+end
+
+class Guitarist < SQLObject
+  finalize!
+
+  belongs_to :band
+  has_many :guitars
+end
+
+class Band < SQLObject
+  finalize!
+
+  has_many :guitarists
+end
 ```
