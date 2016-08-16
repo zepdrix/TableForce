@@ -55,7 +55,7 @@ Using irb/pry, you can load the file and access the methods.
 
 ```
 
-Once you create multiple models define associations in them you will be able to use the association methods.
+If you create multiple models and define associations, you will be able to use the association methods.
 
 ```ruby
 #model.rb
@@ -82,4 +82,21 @@ class Band < SQLObject
 
   has_many :guitarists
 end
+```
+
+As you can see, the has_many, belongs_to, and has_one_through methods have defined relationships between the models.
+
+```bash
+[1] pry(main)> load 'model/model.rb'
+=> true
+[2] pry(main)> Guitar.all.first
+=> #<Guitar:0x007f8a9340de70 @attributes={:id=>1, :name=>"Gretsch 62", :guitarist_id=>1}>
+[3] pry(main)> Guitar.all.first.guitarist
+=> #<Guitarist:0x007f8a9340c138 @attributes={:id=>1, :fname=>"George", :lname=>"Harrison", :band_id=>1}>
+[4] pry(main)> Guitar.all.first.band
+=> #<Band:0x007f8a93c16b80 @attributes={:id=>1, :name=>"The Beatles"}>
+[5] pry(main)> Guitarist.find(2).guitars
+=> [#<Guitar:0x007f8a92e6fec8 @attributes={:id=>2, :name=>"Rickenbacker 325", :guitarist_id=>2}>,
+ #<Guitar:0x007f8a92e6fc20 @attributes={:id=>5, :name=>"Epiphone Casino", :guitarist_id=>2}>]
+
 ```
