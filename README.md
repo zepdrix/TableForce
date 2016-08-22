@@ -7,15 +7,15 @@ TableForce executes SQL queries so you don't have to. It is a lightweight tool t
 TableForce provides a SQLObject class that interacts with a database (a demo SQLite database is included in this repo)
 
 Built-in methods include:
- - `all` => returns an array of all database records
- - `find` => looks up a record by its primary key
- - `insert` => inserts a new row into the table
- - `update` => updates an existing row in the table with given params
- - `save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
- - `where` => initiates a SQL query with a params argument, prevents SQL injection attacks
- - `belongs_to` => builds a method that describes a relationship with a given association name and an options hash
- - `has_many` => builds a method that describes a relationship with a given association name and an options hash
- - `has_one_through` => builds a method that describes a relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
+ - `::all` => returns an array of all database records
+ - `::find` => looks up a record by its primary key
+ - `#insert` => inserts a new row into the table
+ - `#update` => updates an existing row in the table with given params
+ - `#save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
+ - `#where` => initiates a SQL query with a params argument, prevents SQL injection attacks
+ - `#belongs_to` => builds a method that describes a relationship with a given association name and an options hash
+ - `#has_many` => builds a method that describes a relationship with a given association name and an options hash
+ - `#has_one_through` => builds a method that describes a relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
 
 ## TableForce looks great, how can I use it?
 ---
