@@ -4,6 +4,9 @@ require_relative 'associatable'
 require 'active_support/inflector'
 
 class SQLObject
+  extend Associatable
+  extend Searchable
+
   def self.columns
     return @columns if @columns
 
@@ -127,7 +130,4 @@ class SQLObject
   def save
     self.class.find(self.id) ? update : insert
   end
-
-  extend Associatable
-  extend Searchable
 end
