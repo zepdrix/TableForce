@@ -9,19 +9,19 @@ TableForce provides a SQLObject class that interacts with a database (a demo SQL
 Built-in methods include:
  - `::all` => returns an array of all database records
  - `::find` => looks up a record by its primary key
- - `#insert` => inserts a new row into the table
- - `#update` => updates an existing row in the table with given params
- - `#save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
  - `::where` => initiates a SQL query with a params argument, prevents SQL injection attacks
  - `::belongs_to` => builds a method that describes a relationship with a given association name and an options hash
  - `::has_many` => builds a method that describes a relationship with a given association name and an options hash
  - `::has_one_through` => builds a method that describes a relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
+ - `#insert` => inserts a new row into the table
+ - `#update` => updates an existing row in the table with given params
+ - `#save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
 
 ## TableForce looks great, how can I use it?
 ---
 First, clone this repo. A demo .sql file is provided for you. If you want to use your own, just replace the paths in `lib/db_connection.rb` and make your own database. Remember to require `sql_object` and `associatable`.
 
-```ruby
+```Ruby
 #model.rb
 
 require_relative "../lib/sql_object"
@@ -35,7 +35,7 @@ end
 
 Using irb/pry, you can load the file and access the methods.
 
-```bash
+```Bash
 [1] pry(main)> load "model/model.rb"
 => true
 [2] pry(main)> Guitar.all
@@ -55,9 +55,12 @@ Using irb/pry, you can load the file and access the methods.
 
 ```
 
-If you create multiple models and define associations, you will be able to use the association methods.
+If you create multiple models and define associations, you will be able to use the association methods. In the following example, since the tables used in the example have columns that follow naming convention, TableForce is able to create associations without the user specifying foreign key, primary key, or class names.
 
-```ruby
+
+NB: finalize! is a method that TableForce relies on to set up the relationships, the user will need to include the finalize! method call if they use their own classes.
+
+```Ruby
 #model.rb
 
 require_relative "../lib/sql_object"
@@ -82,6 +85,18 @@ class Band < SQLObject
 
   has_many :guitarists
 end
+```
+
+If the primary_key, foreign_key, or class_name fall outside of naming convention or if the user wants to specify them in the code, they can simply pass them in as an options hash at the method call.
+
+```Ruby
+
+class Band < SQLObject
+  finalize!
+
+  has_many :guitarists, primary_key: :id, foreign_key: band_id, class_name: 'Guitar'
+end
+
 ```
 
 As you can see, the has_many, belongs_to, and has_one_through methods have defined relationships between the models.
