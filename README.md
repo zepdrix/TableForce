@@ -1,18 +1,19 @@
 # TableForce
 ---
-TableForce executes SQL queries so you don't have to. It is a lightweight tool that provides Object Relational Mapping in an easy to use format, allowing for minimal configuration.
+TableForce executes SQL queries so you don't have to. It is a lightweight tool inspired by Active Record that provides Object Relational Mapping in an easy to use format, allowing for minimal configuration.
 
 ## What can TableForce do for me?
 ---
 TableForce provides a SQLObject class that interacts with a database (a demo SQLite database is included in this repo)
 
 Built-in methods include:
- - `::all` => returns an array of all database records
- - `::find` => looks up a record by its primary key
- - `::where` => initiates a SQL query with a params argument, prevents SQL injection attacks
+ - `::all` => returns an array of Ruby objects of all records in a table
+ - `::find` => looks up a record by its primary key, returns the object if it exists
+ - `::where` => performs a SQL query with a params argument, prevents SQL injection attacks
  - `::belongs_to` => builds a method that describes a relationship with a given association name and an options hash
  - `::has_many` => builds a method that describes a relationship with a given association name and an options hash
  - `::has_one_through` => builds a method that describes a relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
+ - `::has_many_through` => builds a method that describes a many to many relationship which traverses a join table with a given name, the 'through' model name, and the 'source' model name
  - `#insert` => inserts a new row into the table
  - `#update` => updates an existing row in the table with given params
  - `#save` => a 'convenience' method that calls either calls update (if the SQLObject exists in the table) or insert (if the SQLObject is new)
@@ -35,7 +36,7 @@ end
 
 Using irb/pry, you can load the file and access the methods.
 
-```Bash
+```bash
 [1] pry(main)> load "model/model.rb"
 => true
 [2] pry(main)> Guitar.all
@@ -55,10 +56,10 @@ Using irb/pry, you can load the file and access the methods.
 
 ```
 
-If you create multiple models and define associations, you will be able to use the association methods. In the following example, since the tables used in the example have columns that follow naming convention, TableForce is able to create associations without the user specifying foreign key, primary key, or class names.
+If you create multiple models and define associations, you will be able to use the association methods. In the following example, since the tables used in the example have columns that follow naming convention, TableForce is able to create associations without requiring foreign key, primary key, or class names.
 
 
-NB: finalize! is a method that TableForce relies on to set up the relationships, the user will need to include the finalize! method call if they use their own classes.
+NB: finalize! is a method that TableForce relies on to set up the relationships, you will need to include the finalize! method call if you use your own classes.
 
 ```Ruby
 #model.rb
@@ -71,6 +72,10 @@ class Guitar > SQLObject
 
   belongs_to :guitarist
   has_one_through :band, :guitarist, :band
+
+  #The new association defined here is band, which traverses the through association,
+  #:guitarist, to the source association, :band. The through and source associations
+  #both need to exist in order to define this association.
 end
 
 class Guitarist < SQLObject
@@ -84,17 +89,64 @@ class Band < SQLObject
   finalize!
 
   has_many :guitarists
+  has_many_through :guitars, :guitarists, :guitars
+
+  #The new association defined here is guitars, which traverses the through association,
+  #:guitarists, to the source association, :guitars. The through and source associations
+  #both need to exist in order to define this association.
 end
 ```
 
-If the primary_key, foreign_key, or class_name fall outside of naming convention or if the user wants to specify them in the code, they can simply pass them in as an options hash at the method call.
+Class methods that define associations between tables take in existing associations as arguments and runs SQL queries based on existing table definitions. Here's an example of an association method, the has_many_through method.
+
+```Ruby
+def has_many_through(name, through, source)
+  define_method(name) do
+    through_options = self.class.assoc_options[through]
+    source_options = through_options.model_class.assoc_options[source]
+
+    through_table = through_options.table_name
+    through_primary_key = through_options.primary_key
+    through_foreign_key = through_options.foreign_key
+
+    source_table = source_options.table_name
+    source_primary_key = source_options.primary_key
+    source_foreign_key = source_options.foreign_key
+
+    #Define table names and keys
+
+    table_name = self.class.table_name
+
+    results = DBConnection.execute(<<-SQL, self.id)
+      SELECT
+        #{source_table}.*
+      FROM
+        #{source_table}, #{through_table}, #{table_name}
+      WHERE
+        #{through_table}.#{source_primary_key} = #{source_table}.#{source_foreign_key}
+      AND
+        #{table_name}.id = #{through_table}.#{through_foreign_key}
+      AND
+        #{table_name}.id = ?
+      ORDER BY
+        #{source_table}.#{source_primary_key}
+    SQL
+
+    #Run query based on existing associations
+
+    source_options.model_class.parse_all(results)
+  end
+end
+```
+
+If the primary_key, foreign_key, or class_name fall outside of naming convention or if you want to specify them in the code, simply pass them in as an options hash at the method call.
 
 ```Ruby
 
-class Band < SQLObject
+class Record < SQLObject
   finalize!
 
-  has_many :guitarists, primary_key: :id, foreign_key: band_id, class_name: 'Guitar'
+  has_many :guitarists, primary_key: :id, foreign_key: :album_id, class_name: 'Guitarist'
 end
 
 ```

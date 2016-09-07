@@ -19,4 +19,5 @@ class Band < SQLObject
   finalize!
 
   has_many :guitarists
+  has_many_through :guitars, :guitarists, :guitars
 end
